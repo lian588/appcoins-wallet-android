@@ -9,6 +9,10 @@ public interface PreferenceRepositoryType {
 
   void setOnboardingSkipClicked();
 
+  boolean isCreatingWallet();
+
+  void setCreatingWallet(boolean isCreating);
+
   String getCurrentWalletAddress();
 
   void setCurrentWalletAddress(String address);

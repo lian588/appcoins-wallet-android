@@ -812,8 +812,9 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
   }
 
   @Provides CreateWalletInteract provideCreateAccountInteract(
-      WalletRepositoryType accountRepository, PasswordStore passwordStore) {
-    return new CreateWalletInteract(accountRepository, passwordStore);
+      WalletRepositoryType accountRepository, PasswordStore passwordStore,
+      SharedPreferenceRepository sharedPreferenceRepository) {
+    return new CreateWalletInteract(accountRepository, passwordStore, sharedPreferenceRepository);
   }
 
   @Provides PaymentReceiverInteract providePaymentReceiverInteract(
@@ -959,6 +960,7 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
 
   @Singleton @Provides CampaignInteract provideCampaignInteract(CampaignService campaignService,
       WalletService walletService, CreateWalletInteract createWalletInteract) {
-    return new CampaignInteract(campaignService, walletService, createWalletInteract, new AdvertisingThrowableCodeMapper());
+    return new CampaignInteract(campaignService, walletService, createWalletInteract,
+        new AdvertisingThrowableCodeMapper());
   }
 }
