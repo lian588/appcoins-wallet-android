@@ -67,10 +67,7 @@ class LocalPaymentInteractor(private val deepLinkRepository: InAppDeepLinkReposi
       Log.d("LocalPaymentInteractor", "Getting InApp Purchase...")
       billing.getSkuPurchase(merchantName, sku, scheduler)
           .map {
-            if (it == null) Log.d("LocalPaymentInteractor", "Null Purchase") else {
-              Log.d("LocalPaymentInteractor",
-                  "Purchase: packageName: " + it.packageName.toString() + "status: " + it.status + "uid: " + it.uid + "productName: " + it.product.name + "signature: " + it.signature)
-            }
+            if (it == null) Log.d("LocalPaymentInteractor", "Null Purchase")
             billingMessagesMapper.mapPurchase(it,
                 orderReference)
           }
