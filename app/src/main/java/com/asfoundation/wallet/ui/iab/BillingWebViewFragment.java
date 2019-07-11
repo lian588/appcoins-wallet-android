@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,6 +37,7 @@ public class BillingWebViewFragment extends DaggerFragment {
 
   private static final String BILLING_SCHEMA = "billing://";
   private static final String LOCAL_PAYMENTS_SCHEMA = "myappcoins.com/t/";
+  private static final String GO_PAY_PAYMENTS_SCHEMA = "gojek://gopay/merchanttransfer";
 
   private static final String URL = "url";
   private static final String DOMAIN = "domain";
@@ -109,6 +111,8 @@ public class BillingWebViewFragment extends DaggerFragment {
         .setAcceptCookie(true);
   }
 
+  private static final String TAG = BillingWebViewFragment.class.getSimpleName();
+
   @Nullable @Override
   public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
       @Nullable Bundle savedInstanceState) {
@@ -120,8 +124,8 @@ public class BillingWebViewFragment extends DaggerFragment {
     webView.setWebViewClient(new WebViewClient() {
 
       @Override public boolean shouldOverrideUrlLoading(WebView view, String clickUrl) {
-        currentUrl = clickUrl;
         if (clickUrl.startsWith(BILLING_SCHEMA)) {
+          currentUrl = clickUrl;
           Intent intent = new Intent();
           intent.setData(Uri.parse(clickUrl));
           getActivity().setResult(WebViewActivity.SUCCESS, intent);
@@ -129,13 +133,26 @@ public class BillingWebViewFragment extends DaggerFragment {
           sendRevenueEvent();
           getActivity().finish();
         } else if (clickUrl.contains(LOCAL_PAYMENTS_SCHEMA)) {
+          currentUrl = clickUrl;
           Intent intent = new Intent();
           intent.setData(Uri.parse(clickUrl));
           getActivity().setResult(WebViewActivity.SUCCESS, intent);
           getActivity().finish();
+        } else if (clickUrl.contains(GO_PAY_PAYMENTS_SCHEMA)) {
+          Log.d(TAG, "shouldOverrideUrlLoading() called with: view = ["
+              + view
+              + "], clickUrl = ["
+              + clickUrl
+              + "]");
+          startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(clickUrl)));
+          return true;
         } else {
+          currentUrl = clickUrl;
+          Log.d(TAG, "shouldOverrideUrlLoading() returned: " + " true -> " + clickUrl);
           return false;
         }
+        currentUrl = clickUrl;
+        Log.d(TAG, "shouldOverrideUrlLoading() returned: " + " true -> " + clickUrl);
         return true;
       }
 
