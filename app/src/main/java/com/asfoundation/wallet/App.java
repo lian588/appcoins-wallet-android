@@ -86,7 +86,7 @@ public class App extends MultiDexApplication
             + ".txt");
     try {
       filename.createNewFile();
-      String cmd = "logcat -f" + filename.getAbsolutePath() + " -v time *:V";
+      String cmd = "logcat -f" + filename.getAbsolutePath() + " -v time";
       Runtime.getRuntime()
           .exec(cmd);
     } catch (IOException e) {
