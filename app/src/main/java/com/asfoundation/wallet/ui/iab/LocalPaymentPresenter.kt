@@ -1,6 +1,7 @@
 package com.asfoundation.wallet.ui.iab
 
 import android.os.Bundle
+import android.util.Log
 import com.appcoins.wallet.bdsbilling.repository.entity.Transaction
 import com.appcoins.wallet.bdsbilling.repository.entity.Transaction.Status
 import io.reactivex.Completable
@@ -48,6 +49,7 @@ class LocalPaymentPresenter(private val view: LocalPaymentView,
         localPaymentInteractor.getPaymentLink(domain, skuId, originalAmount, currency,
             paymentId, developerAddress).filter { !waitingResult }.observeOn(
             viewScheduler).doOnSuccess {
+          Log.d("LocalPaymentPresenter", "Navigating to Web Flow")
           navigator.navigateToUriForResult(it, "", domain, skuId, null, "")
           waitingResult = true
         }.subscribeOn(networkScheduler).observeOn(viewScheduler)
@@ -58,12 +60,17 @@ class LocalPaymentPresenter(private val view: LocalPaymentView,
   private fun handlePaymentRedirect() {
     disposables.add(
         navigator.uriResults().doOnNext {
+          Log.d("LocalPaymentPresenter", "Ended Web Flow")
           view.showProcessingLoading()
         }.flatMap {
+          Log.d("LocalPaymentPresenter", "Getting Transaction...")
           localPaymentInteractor.getTransaction(it)
               .subscribeOn(networkScheduler)
         }.observeOn(viewScheduler)
-            .flatMapCompletable { handleTransactionStatus(it) }
+            .flatMapCompletable {
+              Log.d("LocalPaymentPresenter", "Handling Terminate Transaction...")
+              handleTransactionStatus(it)
+            }
             .subscribe({}, { showError(it) }
             ))
   }
@@ -89,6 +96,7 @@ class LocalPaymentPresenter(private val view: LocalPaymentView,
             .observeOn(viewScheduler)
             .flatMapCompletable {
               Completable.fromAction {
+                Log.d("LocalPaymentPresenter", "showing Animation")
                 view.showCompletedPayment()
               }
                   .andThen(Completable.timer(view.getAnimationDuration(), TimeUnit.MILLISECONDS))
@@ -105,6 +113,7 @@ class LocalPaymentPresenter(private val view: LocalPaymentView,
   }
 
   private fun showError(throwable: Throwable) {
+    Log.d("LocalPaymentPresenter", "showing Error")
     throwable.printStackTrace()
     view.showError()
   }

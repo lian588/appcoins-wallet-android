@@ -2,6 +2,7 @@ package com.asfoundation.wallet;
 
 import android.app.Activity;
 import android.app.Service;
+import android.os.Environment;
 import androidx.fragment.app.Fragment;
 import androidx.multidex.MultiDexApplication;
 import com.appcoins.wallet.appcoins.rewards.AppcoinsRewards;
@@ -29,6 +30,10 @@ import io.fabric.sdk.android.Fabric;
 import io.reactivex.exceptions.UndeliverableException;
 import io.reactivex.plugins.RxJavaPlugins;
 import io.realm.Realm;
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import javax.inject.Inject;
 import org.jetbrains.annotations.NotNull;
 
@@ -70,6 +75,23 @@ public class App extends MultiDexApplication
     proofOfAttentionService.start();
     appcoinsOperationsDataSaver.start();
     appcoinsRewards.start();
+
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH:mm");
+    String millisInString = dateFormat.format(new Date());
+
+    File filename = new File(
+        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            + "/walletLogs"
+            + millisInString
+            + ".txt");
+    try {
+      filename.createNewFile();
+      String cmd = "logcat -d -f" + filename.getAbsolutePath() + " -v time *:V";
+      Runtime.getRuntime()
+          .exec(cmd);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   private void setupRxJava() {

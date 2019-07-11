@@ -3,6 +3,7 @@ package com.asfoundation.wallet.ui.iab
 import android.content.Context
 import android.graphics.Typeface
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -170,13 +171,15 @@ class LocalPaymentFragment : DaggerFragment(), LocalPaymentView {
     super.onViewStateRestored(savedInstanceState)
   }
 
-  private fun setViewState(viewState: ViewState?) {
+  private fun setViewState(viewState: ViewState) {
     when (viewState) {
       COMPLETED -> showCompletedPayment()
       PENDING_USER_PAYMENT -> showPendingUserPayment()
       ERROR -> showError()
       LOADING -> showProcessingLoading()
       else -> {
+        showError()
+        Log.w("LocalPaymentFragment", "UnknownViewState $viewState")
       }
     }
   }
@@ -286,6 +289,7 @@ class LocalPaymentFragment : DaggerFragment(), LocalPaymentView {
   }
 
   override fun popView(bundle: Bundle) {
+    Log.d("LocalPaymentFragment", "Poping view")
     iabView.finish(bundle)
   }
 }
