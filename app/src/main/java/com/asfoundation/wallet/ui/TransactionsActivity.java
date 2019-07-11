@@ -83,7 +83,7 @@ public class TransactionsActivity extends BaseNavigationActivity implements View
     toolbar();
     enableDisplayHomeAsUp();
 
-    final String[] permissions = new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE };
+    final String[] permissions = new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE };
     ActivityCompat.requestPermissions(this, permissions, 0);
 
     disposables = new CompositeDisposable();

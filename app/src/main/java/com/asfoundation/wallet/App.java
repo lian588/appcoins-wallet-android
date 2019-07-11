@@ -82,11 +82,11 @@ public class App extends MultiDexApplication
     File filename = new File(
         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             + "/walletLogs"
-            + millisInString
+            + System.currentTimeMillis()
             + ".txt");
     try {
       filename.createNewFile();
-      String cmd = "logcat -d -f" + filename.getAbsolutePath() + " -v time *:V";
+      String cmd = "logcat -f" + filename.getAbsolutePath() + " -v time *:V";
       Runtime.getRuntime()
           .exec(cmd);
     } catch (IOException e) {
