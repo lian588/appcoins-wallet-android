@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Html;
@@ -83,9 +84,13 @@ public class TransactionsActivity extends BaseNavigationActivity implements View
     toolbar();
     enableDisplayHomeAsUp();
 
-    final String[] permissions = new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE };
-    ActivityCompat.requestPermissions(this, permissions, 0);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
+      final String[] permissions = new String[] {
+          Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE
+      };
+      ActivityCompat.requestPermissions(this, permissions, 0);
+    }
     disposables = new CompositeDisposable();
 
     balanceSkeleton = findViewById(R.id.balance_skeleton);

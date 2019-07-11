@@ -32,8 +32,6 @@ import io.reactivex.plugins.RxJavaPlugins;
 import io.realm.Realm;
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import javax.inject.Inject;
 import org.jetbrains.annotations.NotNull;
 
@@ -75,9 +73,6 @@ public class App extends MultiDexApplication
     proofOfAttentionService.start();
     appcoinsOperationsDataSaver.start();
     appcoinsRewards.start();
-
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH:mm");
-    String millisInString = dateFormat.format(new Date());
 
     File filename = new File(
         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
