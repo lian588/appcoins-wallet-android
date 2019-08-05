@@ -107,10 +107,9 @@ class AdyenBillingService(
             walletService.signContent(walletAddress)
                 .flatMap { signedContent ->
                   billing.getSkuTransaction(appPackageName, productName!!, scheduler)
-                      .doOnSuccess { purchase -> this.transactionUid = purchase.uid }
-                      .flatMap { purchase ->
-                        transactionService.getSession(walletAddress,
-                            signedContent, purchase.uid)
+                      .doOnSuccess { transaction -> this.transactionUid = transaction.uid }
+                      .flatMap {
+                        transactionService.getSession(walletAddress, signedContent, transactionUid)
                       }
                       .onErrorResumeNext {
                         adyen.token.flatMap { token ->
