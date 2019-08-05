@@ -1,6 +1,7 @@
 package com.asfoundation.wallet.billing.adyen
 
 import com.adyen.core.models.Payment
+import com.appcoins.wallet.bdsbilling.Billing
 import com.appcoins.wallet.bdsbilling.WalletService
 import com.asfoundation.wallet.billing.BillingService
 import com.asfoundation.wallet.billing.TransactionService
@@ -9,6 +10,7 @@ import com.asfoundation.wallet.billing.partners.AddressService
 import com.jakewharton.rxrelay2.BehaviorRelay
 import io.reactivex.Completable
 import io.reactivex.Observable
+import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.functions.BiFunction
 import java.math.BigDecimal
@@ -19,7 +21,9 @@ class AdyenBillingService(
     private val transactionService: TransactionService,
     private val walletService: WalletService,
     private val adyen: Adyen,
-    private val partnerAddressService: AddressService
+    private val partnerAddressService: AddressService,
+    private val billing: Billing,
+    private val scheduler: Scheduler
 ) : BillingService {
 
   private val relay: BehaviorRelay<AdyenAuthorization> = BehaviorRelay.create()
@@ -36,7 +40,7 @@ class AdyenBillingService(
                                 orderReference: String?,
                                 appPackageName: String): Observable<AdyenAuthorization> {
     return relay.doOnSubscribe {
-      startPaymentIfNeeded(productName, developerAddress, payload, origin,
+      startOrResumePayment(productName, developerAddress, payload, origin,
           priceValue, priceCurrency, type, callback, orderReference, appPackageName)
     }
         .doOnNext { this.resetProcessingFlag(it) }
@@ -92,7 +96,7 @@ class AdyenBillingService(
     }
   }
 
-  private fun startPaymentIfNeeded(productName: String?, developerAddress: String?,
+  private fun startOrResumePayment(productName: String?, developerAddress: String?,
                                    payload: String?,
                                    origin: String, priceValue: BigDecimal, priceCurrency: String,
                                    type: String, callback: String?,
@@ -102,24 +106,18 @@ class AdyenBillingService(
           .flatMap { walletAddress ->
             walletService.signContent(walletAddress)
                 .flatMap { signedContent ->
-                  adyen.token
-                      .flatMap { token ->
-                        Single.zip<String, String, Single<String>>(
-                            partnerAddressService.getStoreAddressForPackage(appPackageName),
-                            partnerAddressService.getOemAddressForPackage(appPackageName),
-                            BiFunction { storeAddress, oemAddress ->
-                              transactionService.createTransaction(
-                                  walletAddress, signedContent, token, merchantName, payload,
-                                  productName,
-                                  developerAddress, storeAddress, oemAddress, origin, walletAddress,
-                                  priceValue, priceCurrency, type, callback, orderReference)
-                            })
-                            .flatMap { transactionUid -> transactionUid }
-                            .doOnSuccess { transactionUid -> this.transactionUid = transactionUid }
-                            .flatMap { transactionUid ->
-                              transactionService.getSession(walletAddress,
-                                  signedContent, transactionUid)
-                            }
+                  billing.getSkuTransaction(appPackageName, productName!!, scheduler)
+                      .doOnSuccess { purchase -> this.transactionUid = purchase.uid }
+                      .flatMap { purchase ->
+                        transactionService.getSession(walletAddress,
+                            signedContent, purchase.uid)
+                      }
+                      .onErrorResumeNext {
+                        adyen.token.flatMap { token ->
+                          startPayment(productName, developerAddress, payload, origin, priceValue,
+                              priceCurrency, type, callback, orderReference, appPackageName,
+                              walletAddress, signedContent, token)
+                        }
                       }
                 }
           }
@@ -132,5 +130,29 @@ class AdyenBillingService(
 
   private fun newDefaultAdyenAuthorization(session: String): AdyenAuthorization {
     return AdyenAuthorization(session, AdyenAuthorization.Status.PENDING)
+  }
+
+  private fun startPayment(productName: String?, developerAddress: String?,
+                           payload: String?,
+                           origin: String, priceValue: BigDecimal, priceCurrency: String,
+                           type: String, callback: String?,
+                           orderReference: String?, appPackageName: String, walletAddress: String,
+                           signedContent: String, token: String): Single<String> {
+    return Single.zip<String, String, Single<String>>(
+        partnerAddressService.getStoreAddressForPackage(appPackageName),
+        partnerAddressService.getOemAddressForPackage(appPackageName),
+        BiFunction { storeAddress, oemAddress ->
+          transactionService.createTransaction(
+              walletAddress, signedContent, token, merchantName, payload,
+              productName,
+              developerAddress, storeAddress, oemAddress, origin, walletAddress,
+              priceValue, priceCurrency, type, callback, orderReference)
+        })
+        .flatMap { transactionUid -> transactionUid }
+        .doOnSuccess { transactionUid -> this.transactionUid = transactionUid }
+        .flatMap { transactionUid ->
+          transactionService.getSession(walletAddress,
+              signedContent, transactionUid)
+        }
   }
 }

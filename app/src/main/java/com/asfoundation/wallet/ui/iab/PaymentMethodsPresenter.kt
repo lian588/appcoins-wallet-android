@@ -37,7 +37,7 @@ class PaymentMethodsPresenter(
     private val billing: Billing,
     private val analytics: BillingAnalytics,
     private val isBds: Boolean,
-    private val developerPayload: String,
+    private val developerPayload: String?,
     private val uri: String,
     private val gamification: GamificationInteractor,
     private val transaction: TransactionBuilder,
