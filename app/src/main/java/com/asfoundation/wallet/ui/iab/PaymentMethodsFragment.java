@@ -119,6 +119,7 @@ public class PaymentMethodsFragment extends DaggerFragment implements PaymentMet
 
   private View preSelectedMethodView;
   private ImageView preSelectedIcon;
+  private TextView pareSelectedNameSingle;
   private TextView preSelectedName;
   private TextView preSelectedDescription;
 
@@ -213,6 +214,7 @@ public class PaymentMethodsFragment extends DaggerFragment implements PaymentMet
     preSelectedMethodView = view.findViewById(R.id.layout_pre_selected);
     preSelectedIcon = preSelectedMethodView.findViewById(R.id.payment_method_ic);
     preSelectedName = preSelectedMethodView.findViewById(R.id.payment_method_description);
+    pareSelectedNameSingle = preSelectedMethodView.findViewById(R.id.payment_method_description_single);
     preSelectedDescription = preSelectedMethodView.findViewById(R.id.payment_method_secondary);
 
     setupAppNameAndIcon();
@@ -256,6 +258,7 @@ public class PaymentMethodsFragment extends DaggerFragment implements PaymentMet
     preSelectedMethodView = null;
     preSelectedIcon = null;
     preSelectedName = null;
+    pareSelectedNameSingle = null;
     preSelectedDescription = null;
 
     super.onDestroyView();
@@ -443,8 +446,8 @@ public class PaymentMethodsFragment extends DaggerFragment implements PaymentMet
   }
 
   @Override public void hideBonus() {
-    bonusView.setVisibility(View.INVISIBLE);
-    bonusMsg.setVisibility(View.INVISIBLE);
+    bonusView.setVisibility(View.GONE);
+    bonusMsg.setVisibility(View.GONE);
     if (bottomSeparator != null) {
       bottomSeparator.setVisibility(View.INVISIBLE);
     }
@@ -581,6 +584,9 @@ public class PaymentMethodsFragment extends DaggerFragment implements PaymentMet
   private void setupPaymentMethods(List<PaymentMethod> paymentMethods, String preSelectedMethod) {
     preSelectedPaymentMethodGroup.setVisibility(View.GONE);
     paymentMethodsGroup.setVisibility(View.VISIBLE);
+    if (bottomSeparator != null) {
+      bottomSeparator.setVisibility(View.VISIBLE);
+    }
 
     AppCompatRadioButton radioButton;
     if (isBds) {
@@ -622,14 +628,20 @@ public class PaymentMethodsFragment extends DaggerFragment implements PaymentMet
 
     if (paymentMethod.getId()
         .equals(PaymentMethodId.APPC_CREDITS.getId())) {
+      preSelectedName.setVisibility(View.VISIBLE);
+      preSelectedName.setText(paymentMethod.getLabel());
       preSelectedDescription.setVisibility(View.VISIBLE);
+      pareSelectedNameSingle.setVisibility(View.GONE);
       hideBonus();
     } else {
+      preSelectedName.setVisibility(View.VISIBLE);
+      preSelectedName.setText(paymentMethod.getLabel());
       preSelectedDescription.setVisibility(View.GONE);
+      pareSelectedNameSingle.setVisibility(View.GONE);
     }
 
     preSelectedMethodView.setVisibility(View.VISIBLE);
-    preSelectedName.setText(paymentMethod.getLabel());
+
     loadIcons(paymentMethod, preSelectedIcon);
   }
 
