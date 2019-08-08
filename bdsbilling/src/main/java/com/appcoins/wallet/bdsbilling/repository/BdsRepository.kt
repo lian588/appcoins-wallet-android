@@ -1,6 +1,7 @@
 package com.appcoins.wallet.bdsbilling.repository
 
 import com.appcoins.wallet.bdsbilling.BillingRepository
+import com.appcoins.wallet.bdsbilling.repository.entity.Gateway
 import com.appcoins.wallet.bdsbilling.repository.entity.PaymentMethodEntity
 import com.appcoins.wallet.bdsbilling.repository.entity.Purchase
 import com.appcoins.wallet.bdsbilling.repository.entity.Transaction
@@ -59,7 +60,21 @@ class BdsRepository(private val remoteRepository: RemoteRepository) : BillingRep
                                  walletSignature: String): Single<Transaction> {
     return remoteRepository.getSkuTransaction(packageName, skuId, walletAddress, walletSignature)
         .flatMap {
-          if (!it.items.isEmpty()) {
+          if (it.items.isNotEmpty()) {
+            return@flatMap Single.just(it.items[0])
+          }
+          return@flatMap Single.just(Transaction.notFound())
+        }
+  }
+
+  override fun getTransaction(packageName: String?, skuId: String?, walletAddress: String,
+                              walletSignature: String, transactionType: TransactionType?,
+                              status: TransactionStatus?,
+                              gateway: Gateway.Name?): Single<Transaction> {
+    return remoteRepository.getTransaction(packageName, skuId, walletAddress, walletSignature,
+        transactionType, status, gateway)
+        .flatMap {
+          if (it.items.isNotEmpty()) {
             return@flatMap Single.just(it.items[0])
           }
           return@flatMap Single.just(Transaction.notFound())

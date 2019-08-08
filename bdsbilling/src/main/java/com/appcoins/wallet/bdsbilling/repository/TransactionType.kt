@@ -1,5 +1,9 @@
 package com.appcoins.wallet.bdsbilling.repository
 
 enum class TransactionType {
-  INAPP
+  DONATION,
+  INAPP,
+  INAPP_UNMANAGED,
+  TOPUP,
+  TRANSFER
 }

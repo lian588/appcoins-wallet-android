@@ -3,6 +3,10 @@ package com.asfoundation.wallet.billing.adyen
 import com.adyen.core.models.Payment
 import com.appcoins.wallet.bdsbilling.Billing
 import com.appcoins.wallet.bdsbilling.WalletService
+import com.appcoins.wallet.bdsbilling.repository.TransactionStatus
+import com.appcoins.wallet.bdsbilling.repository.TransactionType
+import com.appcoins.wallet.bdsbilling.repository.entity.Gateway
+import com.appcoins.wallet.bdsbilling.repository.entity.Transaction
 import com.asfoundation.wallet.billing.BillingService
 import com.asfoundation.wallet.billing.TransactionService
 import com.asfoundation.wallet.billing.authorization.AdyenAuthorization
@@ -97,19 +101,29 @@ class AdyenBillingService(
   }
 
   private fun startOrResumePayment(productName: String?, developerAddress: String?,
-                                   payload: String?,
-                                   origin: String, priceValue: BigDecimal, priceCurrency: String,
-                                   type: String, callback: String?,
+                                   payload: String?, origin: String, priceValue: BigDecimal,
+                                   priceCurrency: String, type: String, callback: String?,
                                    orderReference: String?, appPackageName: String) {
     if (!processingPayment.getAndSet(true)) {
       this.adyenAuthorization = walletService.getWalletAddress()
           .flatMap { walletAddress ->
             walletService.signContent(walletAddress)
                 .flatMap { signedContent ->
-                  billing.getSkuTransaction(appPackageName, productName!!, scheduler)
-                      .doOnSuccess { transaction -> this.transactionUid = transaction.uid }
+                  billing.getTransaction(appPackageName, productName, walletAddress, signedContent,
+                      TransactionType.valueOf(type),
+                      TransactionStatus.PENDING_SERVICE_AUTHORIZATION, Gateway.Name.adyen)
                       .flatMap {
-                        transactionService.getSession(walletAddress, signedContent, transactionUid)
+                        if (it.status != Transaction.Status.INVALID_TRANSACTION) {
+                          this.transactionUid = it.uid
+                          transactionService.getSession(walletAddress, signedContent,
+                              transactionUid)
+                        } else {
+                          adyen.token.flatMap { token ->
+                            startPayment(productName, developerAddress, payload, origin, priceValue,
+                                priceCurrency, type, callback, orderReference, appPackageName,
+                                walletAddress, signedContent, token)
+                          }
+                        }
                       }
                       .onErrorResumeNext {
                         adyen.token.flatMap { token ->

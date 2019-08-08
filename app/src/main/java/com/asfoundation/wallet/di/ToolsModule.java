@@ -421,8 +421,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
       BdsTransactionService bdsTransactionService, BillingMessagesMapper billingMessagesMapper) {
     return new AsfInAppPurchaseInteractor(inAppPurchaseService, defaultWalletInteract,
         gasSettingsInteract, new BigDecimal(BuildConfig.PAYMENT_GAS_LIMIT), parser,
-        billingMessagesMapper, billing, new ExternalBillingSerializer(), currencyConversionService,
-        bdsTransactionService, Schedulers.io(), transactionIdHelper);
+        billingMessagesMapper, billing, currencyConversionService, bdsTransactionService,
+        Schedulers.io());
   }
 
   @Singleton @Provides @Named("ASF_IN_APP_INTERACTOR")
@@ -433,8 +433,8 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
       BdsTransactionService bdsTransactionService, BillingMessagesMapper billingMessagesMapper) {
     return new AsfInAppPurchaseInteractor(inAppPurchaseService, defaultWalletInteract,
         gasSettingsInteract, new BigDecimal(BuildConfig.PAYMENT_GAS_LIMIT), parser,
-        billingMessagesMapper, billing, new ExternalBillingSerializer(), currencyConversionService,
-        bdsTransactionService, Schedulers.io(), transactionIdHelper);
+        billingMessagesMapper, billing, currencyConversionService, bdsTransactionService,
+        Schedulers.io());
   }
 
   @Singleton @Provides InAppPurchaseInteractor provideDualInAppPurchaseInteractor(

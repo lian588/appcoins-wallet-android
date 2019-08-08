@@ -65,10 +65,10 @@ public class InAppPurchaseInteractor {
       boolean isBds) {
     if (isBds) {
       return bdsInAppPurchaseInteractor.send(uri, transactionType, packageName, productName,
-          channelBudget, developerPayload);
+          developerPayload);
     } else {
       return asfInAppPurchaseInteractor.send(uri, transactionType, packageName, productName,
-          channelBudget, developerPayload);
+          developerPayload);
     }
   }
 

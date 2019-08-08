@@ -37,9 +37,19 @@ class RemoteRepository(private val api: BdsApi, private val responseMapper: BdsA
                                  skuId: String,
                                  walletAddress: String,
                                  walletSignature: String): Single<TransactionsResponse> {
-    return api.getSkuTransaction(walletAddress, walletSignature, 0, TransactionType.INAPP, 1,
-        "latest", false, skuId, packageName)
+    return api.getTransaction(walletAddress, walletSignature, 0, TransactionType.INAPP, 1,
+        "latest", false, skuId, packageName, null, null)
+  }
 
+  internal fun getTransaction(packageName: String?,
+                              skuId: String?,
+                              walletAddress: String,
+                              walletSignature: String,
+                              transactionType: TransactionType?,
+                              status: TransactionStatus?,
+                              gateway: Gateway.Name?): Single<TransactionsResponse> {
+    return api.getTransaction(walletAddress, walletSignature, 0, transactionType, 1,
+        "latest", false, skuId, packageName, status, gateway)
   }
 
   internal fun getPurchases(packageName: String,
@@ -155,16 +165,18 @@ class RemoteRepository(private val api: BdsApi, private val responseMapper: BdsA
                        @Query("wallet.signature") walletSignature: String): Single<Purchase>
 
     @GET("broker/8.20180518/transactions")
-    fun getSkuTransaction(
+    fun getTransaction(
         @Query("wallet.address") walletAddress: String,
         @Query("wallet.signature") walletSignature: String,
-        @Query("cursor") cursor: Long,
-        @Query("type") type: TransactionType,
+        @Query("cursor") cursor: Long?,
+        @Query("type") type: TransactionType?,
         @Query("limit") limit: Long,
-        @Query("sort.name") sort: String,
-        @Query("sort.reverse") isReverse: Boolean,
-        @Query("product") skuId: String,
-        @Query("domain") packageName: String
+        @Query("sort.name") sort: String?,
+        @Query("sort.reverse") isReverse: Boolean?,
+        @Query("product") skuId: String?,
+        @Query("domain") packageName: String?,
+        @Query("status") status: TransactionStatus?,
+        @Query("gateway") gateway: Gateway.Name?
     ): Single<TransactionsResponse>
 
     @GET("broker/8.20180518/transactions/{uId}")

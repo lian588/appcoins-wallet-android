@@ -1,6 +1,9 @@
 package com.appcoins.wallet.bdsbilling
 
 import com.appcoins.wallet.bdsbilling.repository.BillingSupportedType
+import com.appcoins.wallet.bdsbilling.repository.TransactionStatus
+import com.appcoins.wallet.bdsbilling.repository.TransactionType
+import com.appcoins.wallet.bdsbilling.repository.entity.Gateway
 import com.appcoins.wallet.bdsbilling.repository.entity.PaymentMethodEntity
 import com.appcoins.wallet.bdsbilling.repository.entity.Purchase
 import com.appcoins.wallet.bdsbilling.repository.entity.Transaction
@@ -53,6 +56,14 @@ class BdsBilling(private val repository: BillingRepository,
                 repository.getSkuTransaction(merchantName, sku, address, signedContent)
               }
         }
+  }
+
+  override fun getTransaction(packageName: String?, skuId: String?, walletAddress: String,
+                              signedContent: String, transactionType: TransactionType?,
+                              status: TransactionStatus?,
+                              gateway: Gateway.Name?): Single<Transaction> {
+    return repository.getTransaction(packageName, skuId, walletAddress, signedContent,
+        transactionType, status, gateway)
   }
 
   override fun getSkuPurchase(merchantName: String, sku: String,

@@ -1,6 +1,9 @@
 package com.appcoins.wallet.bdsbilling
 
 import com.appcoins.wallet.bdsbilling.repository.BillingSupportedType
+import com.appcoins.wallet.bdsbilling.repository.TransactionStatus
+import com.appcoins.wallet.bdsbilling.repository.TransactionType
+import com.appcoins.wallet.bdsbilling.repository.entity.Gateway
 import com.appcoins.wallet.bdsbilling.repository.entity.PaymentMethodEntity
 import com.appcoins.wallet.bdsbilling.repository.entity.Purchase
 import com.appcoins.wallet.bdsbilling.repository.entity.Transaction
@@ -20,6 +23,10 @@ interface BillingRepository {
 
   fun getSkuTransaction(packageName: String, skuId: String, walletAddress: String,
                         walletSignature: String): Single<Transaction>
+
+  fun getTransaction(packageName: String?, skuId: String?, walletAddress: String,
+                     walletSignature: String, transactionType: TransactionType?,
+                     status: TransactionStatus?, gateway: Gateway.Name?): Single<Transaction>
 
   fun getPurchases(packageName: String, walletAddress: String, walletSignature: String,
                    type: BillingSupportedType): Single<List<Purchase>>
