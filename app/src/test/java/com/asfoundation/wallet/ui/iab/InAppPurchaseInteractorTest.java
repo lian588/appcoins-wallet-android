@@ -43,7 +43,6 @@ import com.asfoundation.wallet.service.TokenRateService;
 import com.asfoundation.wallet.ui.iab.database.AppCoinsOperationEntity;
 import com.asfoundation.wallet.util.EIPTransactionParser;
 import com.asfoundation.wallet.util.OneStepTransactionParser;
-import com.asfoundation.wallet.util.TransactionIdHelper;
 import com.asfoundation.wallet.util.TransferParser;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
@@ -117,7 +116,6 @@ public class InAppPurchaseInteractorTest {
   private DataMapper dataMapper;
   private EIPTransactionParser eipTransactionParser;
   private OneStepTransactionParser oneStepTransactionParser;
-  private TransactionIdHelper transactionIdHelper = new TransactionIdHelper();
 
   @Before public void before()
       throws AppInfoProvider.UnknownApplicationException, ImageSaver.SaveException {
@@ -220,12 +218,11 @@ public class InAppPurchaseInteractorTest {
             gasSettingsInteract, BigDecimal.ONE,
             new TransferParser(eipTransactionParser, oneStepTransactionParser),
             new BillingMessagesMapper(new ExternalBillingSerializer()), billing,
-            new ExternalBillingSerializer(),
             new CurrencyConversionService(Mockito.mock(TokenRateService.class),
                 Mockito.mock(LocalCurrencyConversionService.class)),
             new BdsTransactionService(scheduler,
                 new MemoryCache<>(BehaviorSubject.create(), new ConcurrentHashMap<>()),
-                new CompositeDisposable(), transactionService), scheduler, transactionIdHelper);
+                new CompositeDisposable(), transactionService), scheduler);
 
     BillingPaymentProofSubmission billingPaymentProofSubmission =
         Mockito.mock(BillingPaymentProofSubmission.class);
