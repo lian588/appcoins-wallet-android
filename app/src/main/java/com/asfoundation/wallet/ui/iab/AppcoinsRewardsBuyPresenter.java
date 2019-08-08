@@ -83,9 +83,7 @@ public class AppcoinsRewardsBuyPresenter {
       BigDecimal amount) {
     switch (transaction.getStatus()) {
       case PROCESSING:
-        return Completable.fromAction(() -> {
-          view.showLoading();
-        });
+        return Completable.fromAction(view::showLoading);
       case COMPLETED:
         if (isBds && transactionBuilder.getType()
             .equalsIgnoreCase(TransactionData.TransactionType.INAPP.name())) {

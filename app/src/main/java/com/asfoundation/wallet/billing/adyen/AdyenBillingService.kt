@@ -113,7 +113,8 @@ class AdyenBillingService(
                       TransactionType.valueOf(type),
                       TransactionStatus.PENDING_SERVICE_AUTHORIZATION, Gateway.Name.adyen)
                       .flatMap {
-                        if (it.status != Transaction.Status.INVALID_TRANSACTION) {
+                        if (it.status != Transaction.Status.INVALID_TRANSACTION && it.gateway?.name == Gateway.Name.adyen) {
+                          //TODO REMOVE t.gateway?.name == Gateway.Name.appcoins_credits
                           this.transactionUid = it.uid
                           transactionService.getSession(walletAddress, signedContent,
                               transactionUid)

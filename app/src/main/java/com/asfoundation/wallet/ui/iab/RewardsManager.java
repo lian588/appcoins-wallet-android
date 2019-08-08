@@ -29,15 +29,14 @@ public class RewardsManager {
   public Completable pay(String sku, BigDecimal amount, String developerAddress, String packageName,
       String origin, String type, String payload, String callbackUrl, String orderReference) {
     return Single.zip(partnerAddressService.getStoreAddressForPackage(packageName),
-        partnerAddressService.getOemAddressForPackage(packageName),
-        (storeAddress, oemAddress) -> new Pair<>(storeAddress, oemAddress))
+        partnerAddressService.getOemAddressForPackage(packageName), Pair::new)
         .flatMapCompletable(
             partnersAddresses -> appcoinsRewards.pay(amount, origin, sku, type, developerAddress,
                 partnersAddresses.first, partnersAddresses.second, packageName, payload,
                 callbackUrl, orderReference));
   }
 
-  public Single<Purchase> getPaymentCompleted(String packageName, String sku) {
+  Single<Purchase> getPaymentCompleted(String packageName, String sku) {
     return billing.getSkuPurchase(packageName, sku, Schedulers.io());
   }
 
@@ -45,8 +44,7 @@ public class RewardsManager {
     return appcoinsRewards.getPayment(packageName, sku, amount.toString());
   }
 
-  public Observable<RewardPayment> getPaymentStatus(String packageName, String sku,
-      BigDecimal amount) {
+  Observable<RewardPayment> getPaymentStatus(String packageName, String sku, BigDecimal amount) {
     return appcoinsRewards.getPayment(packageName, sku, amount.toString())
         .flatMap(this::map);
   }
