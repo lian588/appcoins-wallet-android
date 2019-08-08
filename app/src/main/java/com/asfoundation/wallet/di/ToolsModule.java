@@ -742,9 +742,9 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
 
   @Singleton @Provides BillingFactory provideCreditCardBillingFactory(
       TransactionService transactionService, WalletService walletService, Adyen adyen,
-      AddressService addressService, Billing billing) {
+      AddressService addressService) {
     return merchantName -> new AdyenBillingService(merchantName, transactionService, walletService,
-        adyen, addressService, billing, Schedulers.io());
+        adyen, addressService);
   }
 
   @Singleton @Provides BdsPendingTransactionService provideBdsPendingTransactionService(

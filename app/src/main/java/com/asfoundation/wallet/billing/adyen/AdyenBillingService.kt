@@ -1,12 +1,7 @@
 package com.asfoundation.wallet.billing.adyen
 
 import com.adyen.core.models.Payment
-import com.appcoins.wallet.bdsbilling.Billing
 import com.appcoins.wallet.bdsbilling.WalletService
-import com.appcoins.wallet.bdsbilling.repository.TransactionStatus
-import com.appcoins.wallet.bdsbilling.repository.TransactionType
-import com.appcoins.wallet.bdsbilling.repository.entity.Gateway
-import com.appcoins.wallet.bdsbilling.repository.entity.Transaction
 import com.asfoundation.wallet.billing.BillingService
 import com.asfoundation.wallet.billing.TransactionService
 import com.asfoundation.wallet.billing.authorization.AdyenAuthorization
@@ -14,7 +9,6 @@ import com.asfoundation.wallet.billing.partners.AddressService
 import com.jakewharton.rxrelay2.BehaviorRelay
 import io.reactivex.Completable
 import io.reactivex.Observable
-import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.functions.BiFunction
 import java.math.BigDecimal
@@ -25,9 +19,7 @@ class AdyenBillingService(
     private val transactionService: TransactionService,
     private val walletService: WalletService,
     private val adyen: Adyen,
-    private val partnerAddressService: AddressService,
-    private val billing: Billing,
-    private val scheduler: Scheduler
+    private val partnerAddressService: AddressService
 ) : BillingService {
 
   private val relay: BehaviorRelay<AdyenAuthorization> = BehaviorRelay.create()
@@ -44,7 +36,7 @@ class AdyenBillingService(
                                 orderReference: String?,
                                 appPackageName: String): Observable<AdyenAuthorization> {
     return relay.doOnSubscribe {
-      startOrResumePayment(productName, developerAddress, payload, origin,
+      startPaymentIfNeeded(productName, developerAddress, payload, origin,
           priceValue, priceCurrency, type, callback, orderReference, appPackageName)
     }
         .doOnNext { this.resetProcessingFlag(it) }
@@ -100,38 +92,34 @@ class AdyenBillingService(
     }
   }
 
-  private fun startOrResumePayment(productName: String?, developerAddress: String?,
-                                   payload: String?, origin: String, priceValue: BigDecimal,
-                                   priceCurrency: String, type: String, callback: String?,
+  private fun startPaymentIfNeeded(productName: String?, developerAddress: String?,
+                                   payload: String?,
+                                   origin: String, priceValue: BigDecimal, priceCurrency: String,
+                                   type: String, callback: String?,
                                    orderReference: String?, appPackageName: String) {
     if (!processingPayment.getAndSet(true)) {
       this.adyenAuthorization = walletService.getWalletAddress()
           .flatMap { walletAddress ->
             walletService.signContent(walletAddress)
                 .flatMap { signedContent ->
-                  billing.getTransaction(appPackageName, productName, walletAddress, signedContent,
-                      TransactionType.valueOf(type),
-                      TransactionStatus.PENDING_SERVICE_AUTHORIZATION, Gateway.Name.adyen)
-                      .flatMap {
-                        if (it.status != Transaction.Status.INVALID_TRANSACTION && it.gateway?.name == Gateway.Name.adyen) {
-                          //TODO REMOVE t.gateway?.name == Gateway.Name.appcoins_credits
-                          this.transactionUid = it.uid
-                          transactionService.getSession(walletAddress, signedContent,
-                              transactionUid)
-                        } else {
-                          adyen.token.flatMap { token ->
-                            startPayment(productName, developerAddress, payload, origin, priceValue,
-                                priceCurrency, type, callback, orderReference, appPackageName,
-                                walletAddress, signedContent, token)
-                          }
-                        }
-                      }
-                      .onErrorResumeNext {
-                        adyen.token.flatMap { token ->
-                          startPayment(productName, developerAddress, payload, origin, priceValue,
-                              priceCurrency, type, callback, orderReference, appPackageName,
-                              walletAddress, signedContent, token)
-                        }
+                  adyen.token
+                      .flatMap { token ->
+                        Single.zip<String, String, Single<String>>(
+                            partnerAddressService.getStoreAddressForPackage(appPackageName),
+                            partnerAddressService.getOemAddressForPackage(appPackageName),
+                            BiFunction { storeAddress, oemAddress ->
+                              transactionService.createTransaction(
+                                  walletAddress, signedContent, token, merchantName, payload,
+                                  productName,
+                                  developerAddress, storeAddress, oemAddress, origin, walletAddress,
+                                  priceValue, priceCurrency, type, callback, orderReference)
+                            })
+                            .flatMap { transactionUid -> transactionUid }
+                            .doOnSuccess { transactionUid -> this.transactionUid = transactionUid }
+                            .flatMap { transactionUid ->
+                              transactionService.getSession(walletAddress,
+                                  signedContent, transactionUid)
+                            }
                       }
                 }
           }
@@ -144,29 +132,5 @@ class AdyenBillingService(
 
   private fun newDefaultAdyenAuthorization(session: String): AdyenAuthorization {
     return AdyenAuthorization(session, AdyenAuthorization.Status.PENDING)
-  }
-
-  private fun startPayment(productName: String?, developerAddress: String?,
-                           payload: String?,
-                           origin: String, priceValue: BigDecimal, priceCurrency: String,
-                           type: String, callback: String?,
-                           orderReference: String?, appPackageName: String, walletAddress: String,
-                           signedContent: String, token: String): Single<String> {
-    return Single.zip<String, String, Single<String>>(
-        partnerAddressService.getStoreAddressForPackage(appPackageName),
-        partnerAddressService.getOemAddressForPackage(appPackageName),
-        BiFunction { storeAddress, oemAddress ->
-          transactionService.createTransaction(
-              walletAddress, signedContent, token, merchantName, payload,
-              productName,
-              developerAddress, storeAddress, oemAddress, origin, walletAddress,
-              priceValue, priceCurrency, type, callback, orderReference)
-        })
-        .flatMap { transactionUid -> transactionUid }
-        .doOnSuccess { transactionUid -> this.transactionUid = transactionUid }
-        .flatMap { transactionUid ->
-          transactionService.getSession(walletAddress,
-              signedContent, transactionUid)
-        }
   }
 }
