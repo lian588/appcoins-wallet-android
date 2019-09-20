@@ -96,14 +96,19 @@ class InviteFriendsFragment : DaggerFragment(), InviteFriendsFragmentView {
     activity?.navigateToTopApps()
   }
 
-  override fun showNotificationCard(pendingAmount: BigDecimal, symbol: String) {
-    if (pendingAmount.toDouble() > 0) {
+  override fun showNotificationCard(pendingAmount: String, symbol: String) {
+    val auxPendingAmount = pendingAmount.replace(",", ".")
+    if (auxPendingAmount.toDouble() > 0) {
       referral_notification_card.visibility = VISIBLE
       notification_title.text = getString(R.string.referral_notification_bonus_pending_title,
           "$symbol$pendingAmount")
     } else {
       referral_notification_card.visibility = GONE
     }
+  }
+
+  override fun hideNotificationCard() {
+    referral_notification_card.visibility = GONE
   }
 
   private fun expandBottomSheet() {

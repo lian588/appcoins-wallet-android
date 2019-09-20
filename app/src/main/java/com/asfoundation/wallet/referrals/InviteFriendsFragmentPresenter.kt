@@ -4,7 +4,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import java.io.IOException
-import java.math.BigDecimal
 
 class InviteFriendsFragmentPresenter(private val view: InviteFriendsFragmentView,
                                      private val activity: InviteFriendsActivityView?,
@@ -23,8 +22,8 @@ class InviteFriendsFragmentPresenter(private val view: InviteFriendsFragmentView
         referralInteractor.getPendingBonusNotification()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doOnSuccess { view.showNotificationCard(BigDecimal(it.pendingAmount), it.symbol) }
-            .doOnComplete { view.showNotificationCard(BigDecimal.ZERO, "") }
+            .doOnSuccess { view.showNotificationCard(it.pendingAmount, it.symbol) }
+            .doOnComplete { view.hideNotificationCard() }
             .doOnError { handlerError(it) }
             .subscribe()
     )
