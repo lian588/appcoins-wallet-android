@@ -4,6 +4,8 @@ import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import android.view.View.GONE
+import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.Animation
@@ -130,10 +132,11 @@ class TopUpFragment : DaggerFragment(), TopUpFragmentView {
     adapter = TopUpPaymentMethodAdapter(paymentMethods, paymentMethodClick)
     payment_methods.adapter = adapter
     payment_methods.layoutManager = LinearLayoutManager(context)
-    payment_methods.visibility = View.VISIBLE
+    loading.visibility = GONE
+    payment_methods.visibility = VISIBLE
     swap_value_button.isEnabled = true
-    swap_value_button.visibility = View.VISIBLE
-    swap_value_label.visibility = View.VISIBLE
+    swap_value_button.visibility = VISIBLE
+    swap_value_label.visibility = VISIBLE
   }
 
   override fun onDestroy() {
@@ -176,25 +179,25 @@ class TopUpFragment : DaggerFragment(), TopUpFragmentView {
   }
 
   override fun showLoading() {
-    fragment_braintree_credit_card_form.visibility = View.GONE
+    fragment_braintree_credit_card_form.visibility = GONE
     payment_methods.visibility = View.INVISIBLE
-    bonus_layout.visibility = View.GONE
-    bonus_msg.visibility = View.GONE
-    loading.visibility = View.VISIBLE
+    bonus_layout.visibility = GONE
+    bonus_msg.visibility = GONE
+    loading.visibility = VISIBLE
   }
 
   override fun showPaymentDetailsForm() {
-    payment_methods.visibility = View.GONE
-    loading.visibility = View.GONE
-    fragment_braintree_credit_card_form.visibility = View.VISIBLE
-    bonus_layout.visibility = View.GONE
-    bonus_msg.visibility = View.GONE
+    payment_methods.visibility = GONE
+    loading.visibility = GONE
+    fragment_braintree_credit_card_form.visibility = VISIBLE
+    bonus_layout.visibility = GONE
+    bonus_msg.visibility = GONE
   }
 
   override fun showPaymentMethods() {
-    fragment_braintree_credit_card_form.visibility = View.GONE
-    loading.visibility = View.GONE
-    payment_methods.visibility = View.VISIBLE
+    fragment_braintree_credit_card_form.visibility = GONE
+    loading.visibility = GONE
+    payment_methods.visibility = VISIBLE
   }
 
   override fun rotateChangeCurrencyButton() {
@@ -259,8 +262,8 @@ class TopUpFragment : DaggerFragment(), TopUpFragmentView {
 
   override fun showBonus(bonus: BigDecimal, currency: String) {
     buildBonusString(bonus, currency)
-    bonus_layout.visibility = View.VISIBLE
-    bonus_msg.visibility = View.VISIBLE
+    bonus_layout.visibility = VISIBLE
+    bonus_msg.visibility = VISIBLE
   }
 
   private fun buildBonusString(bonus: BigDecimal, bonusCurrency: String) {
