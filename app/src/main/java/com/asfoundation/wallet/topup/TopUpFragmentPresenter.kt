@@ -88,37 +88,35 @@ class TopUpFragmentPresenter(private val view: TopUpFragmentView,
   }
 
   private fun handleAmountChange(packageName: String) {
-    disposables.add(view.getEditTextChanges().filter {
-      isNumericOrEmpty(it)
-    }.doOnNext { view.setNextButtonState(false) }.debounce(700, TimeUnit.MILLISECONDS)
-        .switchMap { topUpData ->
-          getConvertedValue(topUpData)
-              .subscribeOn(networkScheduler)
-              .map { value ->
-                if (topUpData.selectedCurrency == TopUpData.FIAT_CURRENCY) {
-                  topUpData.currency.appcValue =
-                      if (value.amount == BigDecimal.ZERO) DEFAULT_VALUE else value.amount.toString()
-                } else {
-                  topUpData.currency.fiatValue =
-                      if (value.amount == BigDecimal.ZERO) DEFAULT_VALUE else value.amount.toString()
-                }
-                return@map topUpData
-              }
-              .doOnError { it.printStackTrace() }
-              .onErrorResumeNext(Observable.empty())
-              .observeOn(viewScheduler)
-              .filter { it.currency.appcValue != "--" }
-              .doOnComplete {
-                view.setConversionValue(topUpData)
-              }
-              .flatMap {
-                loadBonusIntoView(packageName, it.currency.fiatValue, it.currency.fiatCurrencyCode)
-                    .doOnNext {
-                      view.setNextButtonState(hasValidData(topUpData))
+    disposables.add(
+        view.getEditTextChanges()
+            .filter { isNumericOrEmpty(it) }
+            .doOnNext { view.setNextButtonState(false) }.debounce(700, TimeUnit.MILLISECONDS)
+            .switchMap { topUpData ->
+              getConvertedValue(topUpData)
+                  .subscribeOn(networkScheduler)
+                  .map { value ->
+                    if (topUpData.selectedCurrency == TopUpData.FIAT_CURRENCY) {
+                      topUpData.currency.appcValue =
+                          if (value.amount == BigDecimal.ZERO) DEFAULT_VALUE else value.amount.toString()
+                    } else {
+                      topUpData.currency.fiatValue =
+                          if (value.amount == BigDecimal.ZERO) DEFAULT_VALUE else value.amount.toString()
                     }
-              }
-        }
-        .subscribe())
+                    return@map topUpData
+                  }
+                  .doOnError { it.printStackTrace() }
+                  .onErrorResumeNext(Observable.empty())
+                  .observeOn(viewScheduler)
+                  .filter { it.currency.appcValue != "--" }
+                  .doOnComplete { view.setConversionValue(topUpData) }
+                  .flatMap {
+                    loadBonusIntoView(packageName, it.currency.fiatValue,
+                        it.currency.fiatCurrencyCode)
+                        .doOnNext { view.setNextButtonState(hasValidData(topUpData)) }
+                  }
+            }
+            .subscribe())
   }
 
   private fun isNumericOrEmpty(data: TopUpData): Boolean {
@@ -132,18 +130,11 @@ class TopUpFragmentPresenter(private val view: TopUpFragmentView,
   }
 
   private fun hasValidData(data: TopUpData): Boolean {
-    return isValidValue(data.currency.fiatValue) &&
-        isValidValue(data.currency.appcValue)
-        && data.paymentMethod != null
+    return isValidValue(data.currency.fiatValue) && isValidValue(data.currency.appcValue)
   }
 
   private fun isValidValue(amount: String): Boolean {
-    return amount.matches(NUMERIC_REGEX.toRegex())
-        && BigDecimal(amount) > BigDecimal.ZERO
-  }
-
-  private fun filterPaymentMethods(methods: List<PaymentMethodData>): List<PaymentMethodData> {
-    return methods.filter { it.id == "paypal" || it.id == "credit_card" }
+    return amount.matches(NUMERIC_REGEX.toRegex()) && BigDecimal(amount) > BigDecimal.ZERO
   }
 
   private fun getConvertedValue(data: TopUpData): Observable<FiatValue> {
