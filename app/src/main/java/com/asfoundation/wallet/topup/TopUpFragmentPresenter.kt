@@ -1,6 +1,7 @@
 package com.asfoundation.wallet.topup
 
 import com.appcoins.wallet.gamification.repository.ForecastBonus
+import com.asfoundation.wallet.billing.adyen.PaymentType
 import com.asfoundation.wallet.topup.TopUpData.Companion.DEFAULT_VALUE
 import com.asfoundation.wallet.topup.paymentMethods.PaymentMethodData
 import com.asfoundation.wallet.ui.iab.FiatValue
@@ -42,7 +43,7 @@ class TopUpFragmentPresenter(private val view: TopUpFragmentView,
         interactor.getPaymentMethods().subscribeOn(networkScheduler).observeOn(viewScheduler),
         interactor.getLocalCurrency().subscribeOn(networkScheduler).observeOn(viewScheduler),
         BiFunction { paymentMethods: List<PaymentMethodData>, currency: LocalCurrency ->
-          view.setupUiElements(filterPaymentMethods(paymentMethods), currency)
+          view.setupUiElements(paymentMethods, currency)
         }).subscribe({ }, { throwable -> throwable.printStackTrace() }))
   }
 
@@ -63,9 +64,27 @@ class TopUpFragmentPresenter(private val view: TopUpFragmentView,
               it.currency.appcValue != DEFAULT_VALUE && it.currency.fiatValue != DEFAULT_VALUE
             }.doOnNext {
               view.showLoading()
-              activity?.navigateToPayment(it.paymentMethod!!, it, it.selectedCurrency, "BDS",
-                  "TOPUP", it.bonusValue)
+              if (isLocalPayment(it.paymentMethod)) {
+                activity?.navigateToLocalPayment(it.paymentMethod, it, it.selectedCurrency,
+                    it.bonusValue)
+              } else {
+                activity?.navigateToAdyenPayment(mapToPaymentType(it.paymentMethod), it,
+                    it.selectedCurrency, "BDS", "TOPUP", it.bonusValue)
+              }
             }.subscribe())
+  }
+
+  private fun isLocalPayment(paymentMethod: String): Boolean {
+    return !(PaymentType.PAYPAL.subTypes.contains(
+        paymentMethod) || PaymentType.CARD.subTypes.contains(paymentMethod))
+  }
+
+  private fun mapToPaymentType(paymentMethod: String): PaymentType {
+    return if (PaymentType.PAYPAL.subTypes.contains(paymentMethod)) {
+      PaymentType.PAYPAL
+    } else {
+      PaymentType.CARD
+    }
   }
 
   private fun handleAmountChange(packageName: String) {

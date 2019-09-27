@@ -194,9 +194,7 @@ class LocalPaymentFragment : DaggerFragment(), LocalPaymentView {
 
   override fun onAttach(context: Context) {
     super.onAttach(context)
-    if (context !is IabView) {
-      throw IllegalStateException("Local payment fragment must be attached to IAB activity")
-    }
+    check(context is IabView) { "Local payment fragment must be attached to IAB activity" }
     iabView = context
   }
 

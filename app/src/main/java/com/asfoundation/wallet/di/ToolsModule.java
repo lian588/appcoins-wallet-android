@@ -153,6 +153,7 @@ import com.asfoundation.wallet.service.TickerService;
 import com.asfoundation.wallet.service.TokenRateService;
 import com.asfoundation.wallet.service.TrustWalletTickerService;
 import com.asfoundation.wallet.topup.TopUpInteractor;
+import com.asfoundation.wallet.topup.TopUpLocalPaymentInteractor;
 import com.asfoundation.wallet.transactions.TransactionsAnalytics;
 import com.asfoundation.wallet.transactions.TransactionsMapper;
 import com.asfoundation.wallet.ui.AppcoinsApps;
@@ -456,6 +457,12 @@ import static com.asfoundation.wallet.service.AppsApi.API_BASE_URL;
       BillingMessagesMapper billingMessagesMapper) {
     return new LocalPaymentInteractor(repository, walletService, partnerAddressService,
         inAppPurchaseInteractor, billing, billingMessagesMapper);
+  }
+
+  @Provides TopUpLocalPaymentInteractor provideTopUpLocalPaymentInteractor(
+      ShareLinkRepository repository, WalletService walletService,
+      InAppPurchaseInteractor inAppPurchaseInteractor) {
+    return new TopUpLocalPaymentInteractor(repository, walletService, inAppPurchaseInteractor);
   }
 
   @Provides LocalPaymentAnalytics provideLocalPaymentAnalytics(BillingAnalytics billingAnalytics,

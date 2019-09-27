@@ -11,7 +11,6 @@ import android.view.animation.RotateAnimation
 import android.view.inputmethod.InputMethodManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.asf.wallet.R
-import com.asfoundation.wallet.billing.adyen.PaymentType
 import com.asfoundation.wallet.topup.TopUpData.Companion.APPC_C_CURRENCY
 import com.asfoundation.wallet.topup.TopUpData.Companion.DEFAULT_VALUE
 import com.asfoundation.wallet.topup.TopUpData.Companion.FIAT_CURRENCY
@@ -305,16 +304,12 @@ class TopUpFragment : DaggerFragment(), TopUpFragmentView {
     converted_value.text = conversionValue
   }
 
-  private fun getSelectedPaymentMethod(): PaymentType {
+  private fun getSelectedPaymentMethod(): String {
     return if (payment_methods.adapter != null) {
       val data = (payment_methods.adapter as TopUpPaymentMethodAdapter).getSelectedItemData()
-      if (PaymentType.PAYPAL.subTypes.contains(data.id)) {
-        PaymentType.PAYPAL
-      } else {
-        PaymentType.CARD
-      }
+      data.id
     } else {
-      PaymentType.CARD
+      "credit_card"
     }
   }
 

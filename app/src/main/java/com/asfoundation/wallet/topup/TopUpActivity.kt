@@ -83,18 +83,23 @@ class TopUpActivity : BaseActivity(), TopUpActivityView, ToolbarManager, UriNavi
     return super.onOptionsItemSelected(item)
   }
 
-  override fun navigateToPayment(paymentType: PaymentType,
-                                 data: TopUpData,
-                                 selectedCurrency: String, origin: String,
-                                 transactionType: String, bonusValue: String) {
+  override fun navigateToAdyenPayment(paymentType: PaymentType,
+                                      data: TopUpData,
+                                      selectedCurrency: String, origin: String,
+                                      transactionType: String, bonusValue: String) {
     supportFragmentManager.beginTransaction()
         .replace(R.id.fragment_container,
-            PaymentAuthFragment.newInstance(
-                paymentType,
-                data,
-                selectedCurrency,
-                origin,
-                transactionType, bonusValue))
+            PaymentAuthFragment.newInstance(paymentType, data, selectedCurrency,
+                origin, transactionType, bonusValue))
+        .commit()
+  }
+
+  override fun navigateToLocalPayment(paymentMethod: String, data: TopUpData,
+                                      selectedCurrency: String, bonusValue: String) {
+    supportFragmentManager.beginTransaction()
+        .replace(R.id.fragment_container,
+            TopUpLocalPaymentFragment.newInstance(packageName, paymentMethod,
+                data.currency.fiatValue, data.currency.fiatCurrencyCode, bonusValue))
         .commit()
   }
 
