@@ -68,18 +68,18 @@ class TopUpFragmentPresenter(private val view: TopUpFragmentView,
                 activity?.navigateToLocalPayment(it.paymentMethod, it, it.selectedCurrency,
                     it.bonusValue)
               } else {
-                activity?.navigateToAdyenPayment(mapToPaymentType(it.paymentMethod), it,
+                activity?.navigateToAdyenPayment(mapToAdyenPaymentType(it.paymentMethod), it,
                     it.selectedCurrency, "BDS", "TOPUP", it.bonusValue)
               }
             }.subscribe())
   }
 
   private fun isLocalPayment(paymentMethod: String): Boolean {
-    return !(PaymentType.PAYPAL.subTypes.contains(
-        paymentMethod) || PaymentType.CARD.subTypes.contains(paymentMethod))
+    return !(PaymentType.PAYPAL.subTypes.contains(paymentMethod)
+        || PaymentType.CARD.subTypes.contains(paymentMethod))
   }
 
-  private fun mapToPaymentType(paymentMethod: String): PaymentType {
+  private fun mapToAdyenPaymentType(paymentMethod: String): PaymentType {
     return if (PaymentType.PAYPAL.subTypes.contains(paymentMethod)) {
       PaymentType.PAYPAL
     } else {
@@ -140,8 +140,7 @@ class TopUpFragmentPresenter(private val view: TopUpFragmentView,
   private fun getConvertedValue(data: TopUpData): Observable<FiatValue> {
     return if (data.selectedCurrency == TopUpData.FIAT_CURRENCY
         && data.currency.fiatValue != DEFAULT_VALUE) {
-      interactor.convertLocal(data.currency.fiatCurrencyCode,
-          data.currency.fiatValue, 2)
+      interactor.convertLocal(data.currency.fiatCurrencyCode, data.currency.fiatValue, 2)
     } else if (data.selectedCurrency == TopUpData.APPC_C_CURRENCY
         && data.currency.appcValue != DEFAULT_VALUE) {
       interactor.convertAppc(data.currency.appcValue)
@@ -151,7 +150,9 @@ class TopUpFragmentPresenter(private val view: TopUpFragmentView,
   }
 
   private fun handlePaymentMethodSelected() {
-    disposables.add(view.getPaymentMethodClick().doOnNext { view.hideKeyboard() }.subscribe())
+    disposables.add(view.getPaymentMethodClick()
+        .doOnNext { view.hideKeyboard() }
+        .subscribe())
   }
 
   private fun loadBonusIntoView(appPackage: String, amount: String,
