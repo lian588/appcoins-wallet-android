@@ -26,8 +26,8 @@ class TopUpLocalPaymentFragment : DaggerFragment(), TopUpLocalPaymentView {
     super.onCreate(savedInstanceState)
     navigator = TopUpLocalPaymentNavigator(activity as UriNavigator, topUpActivity)
     presenter =
-        TopUpLocalPaymentPresenter(this, packageName, amount, currentCurrency, paymentMethod,
-            interactor, navigator, CompositeDisposable(), savedInstanceState,
+        TopUpLocalPaymentPresenter(this, packageName, amount, currentCurrency, bonus,
+            paymentMethod, interactor, navigator, CompositeDisposable(), savedInstanceState,
             AndroidSchedulers.mainThread(), Schedulers.io())
   }
 
@@ -63,10 +63,8 @@ class TopUpLocalPaymentFragment : DaggerFragment(), TopUpLocalPaymentView {
         "not implemented") //To change body of created functions use File | Settings | File Templates.
   }
 
-  override fun showCompletedPayment() {
-    Log.d("TAG123", "HERE, Completing stuff")
-    TODO(
-        "not implemented") //To change body of created functions use File | Settings | File Templates.
+  override fun showCompletedPayment(bundle: Bundle) {
+    topUpActivity.finish(bundle)
   }
 
   override fun showPendingUserPayment() {

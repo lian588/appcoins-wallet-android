@@ -21,10 +21,9 @@ class BillingMessagesMapper(private val billingSerializer: ExternalBillingSerial
 
   companion object {
     internal const val TRANSACTION_HASH = "transaction_hash"
-    internal const val TOP_UP_AMOUNT = "top_up_amount"
-    internal const val TOP_UP_CURRENCY = "currency"
-    internal const val BONUS = "bonus"
-    internal const val VALID_BONUS = "valid_bonus"
+    const val TOP_UP_AMOUNT = "top_up_amount"
+    const val TOP_UP_CURRENCY = "currency"
+    const val BONUS = "bonus"
   }
 
 
