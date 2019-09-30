@@ -3,8 +3,11 @@ package com.asfoundation.wallet.topup
 import android.os.Bundle
 import com.appcoins.wallet.bdsbilling.repository.entity.Transaction
 import com.appcoins.wallet.billing.BillingMessagesMapper
+import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.disposables.CompositeDisposable
+import java.io.IOException
+import java.net.UnknownHostException
 
 class TopUpLocalPaymentPresenter(private val view: TopUpLocalPaymentView,
                                  private val packageName: String,
@@ -27,6 +30,7 @@ class TopUpLocalPaymentPresenter(private val view: TopUpLocalPaymentView,
     }
     onViewCreatedRequestLink()
     handlePaymentRedirect()
+    handleErrorDismissEvent()
   }
 
   private fun onViewCreatedRequestLink() {
@@ -35,8 +39,6 @@ class TopUpLocalPaymentPresenter(private val view: TopUpLocalPaymentView,
             .filter { !waitingResult }
             .observeOn(viewScheduler)
             .doOnSuccess {
-              /*analytics.sendPaymentMethodDetailsEvent(domain, skuId, amount.toString(), type,
-                  paymentId)*/
               navigator.navigateToUriForResult(it)
               waitingResult = true
             }
@@ -46,13 +48,16 @@ class TopUpLocalPaymentPresenter(private val view: TopUpLocalPaymentView,
   }
 
   private fun showError(throwable: Throwable) {
-    //TODO
+    if (isNoNetworkException(throwable)) {
+      view.showNetworkError()
+    } else {
+      view.showGenericError()
+    }
   }
 
   private fun handlePaymentRedirect() {
     disposables.add(navigator.uriResults()
         .doOnNext { view.showProcessingLoading() }
-        .doOnNext { view.lockRotation() }
         .flatMap {
           interactor.getTransaction(it)
               .subscribeOn(networkScheduler)
@@ -67,8 +72,20 @@ class TopUpLocalPaymentPresenter(private val view: TopUpLocalPaymentView,
     when (transaction.status) {
       Transaction.Status.COMPLETED -> view.showCompletedPayment(createTopUpBundle())
       Transaction.Status.PENDING_USER_PAYMENT -> view.showPendingUserPayment()
-      else -> view.showError()
+      else -> view.showGenericError()
     }
+  }
+
+  private fun handleErrorDismissEvent() {
+    disposables.add(
+        Observable.merge(view.errorDismisses(), view.errorCancels(), view.errorPositiveClicks())
+            .subscribe({ navigator.popViewWithError() }, { it.printStackTrace() }))
+  }
+
+  private fun isNoNetworkException(throwable: Throwable): Boolean {
+    return throwable is IOException ||
+        throwable.cause != null && throwable.cause is IOException ||
+        throwable is UnknownHostException
   }
 
   fun stop() {

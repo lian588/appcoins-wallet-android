@@ -279,21 +279,21 @@ class PaymentAuthFragment : DaggerFragment(), PaymentAuthView {
   override fun errorDismisses(): Observable<Any> {
     return Observable.merge<DialogInterface>(networkErrorDialog.dismisses(),
         paymentRefusedDialog.dismisses(), genericErrorDialog.dismisses())
-        .map { topUpView?.unlockRotation() }
+        .doOnNext { topUpView?.unlockRotation() }
         .map { Any() }
   }
 
   override fun errorCancels(): Observable<Any> {
     return Observable.merge<DialogInterface>(networkErrorDialog.cancels(),
         paymentRefusedDialog.cancels(), genericErrorDialog.cancels())
-        .map { topUpView?.unlockRotation() }
+        .doOnNext { topUpView?.unlockRotation() }
         .map { Any() }
   }
 
   override fun errorPositiveClicks(): Observable<Any> {
     return Observable.merge<DialogInterface>(networkErrorDialog.positiveClicks(),
         paymentRefusedDialog.positiveClicks(), genericErrorDialog.positiveClicks())
-        .map { topUpView?.unlockRotation() }
+        .doOnNext { topUpView?.unlockRotation() }
         .map { Any() }
   }
 

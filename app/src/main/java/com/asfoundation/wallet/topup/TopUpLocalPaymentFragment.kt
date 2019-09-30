@@ -1,6 +1,7 @@
 package com.asfoundation.wallet.topup
 
 import android.content.Context
+import android.content.DialogInterface
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -8,7 +9,9 @@ import android.view.View
 import android.view.ViewGroup
 import com.asf.wallet.R
 import com.asfoundation.wallet.navigator.UriNavigator
+import com.asfoundation.wallet.view.rx.RxAlertDialog
 import dagger.android.support.DaggerFragment
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -20,7 +23,9 @@ class TopUpLocalPaymentFragment : DaggerFragment(), TopUpLocalPaymentView {
   lateinit var interactor: TopUpLocalPaymentInteractor
   private lateinit var topUpActivity: TopUpActivityView
   private lateinit var navigator: TopUpLocalPaymentNavigator
-  lateinit var presenter: TopUpLocalPaymentPresenter
+  private lateinit var genericErrorDialog: RxAlertDialog
+  private lateinit var networkErrorDialog: RxAlertDialog
+  private lateinit var presenter: TopUpLocalPaymentPresenter
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -40,6 +45,16 @@ class TopUpLocalPaymentFragment : DaggerFragment(), TopUpLocalPaymentView {
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
+    genericErrorDialog = RxAlertDialog.Builder(context)
+        .setMessage(R.string.unknown_error)
+        .setPositiveButton(R.string.ok)
+        .build()
+
+    networkErrorDialog =
+        RxAlertDialog.Builder(context)
+            .setMessage(R.string.notification_no_network_poa)
+            .setPositiveButton(R.string.ok)
+            .build()
     presenter.present()
   }
 
@@ -49,12 +64,6 @@ class TopUpLocalPaymentFragment : DaggerFragment(), TopUpLocalPaymentView {
   }
 
   override fun showProcessingLoading() {
-    Log.d("TAG123", "HERE, Processing stuff")
-    TODO(
-        "not implemented") //To change body of created functions use File | Settings | File Templates.
-  }
-
-  override fun lockRotation() {
     topUpActivity.lockOrientation()
   }
 
@@ -73,10 +82,39 @@ class TopUpLocalPaymentFragment : DaggerFragment(), TopUpLocalPaymentView {
         "not implemented") //To change body of created functions use File | Settings | File Templates.
   }
 
-  override fun showError() {
-    Log.d("TAG123", "HERE, Showing error stuff")
-    TODO(
-        "not implemented") //To change body of created functions use File | Settings | File Templates.
+  override fun showGenericError() {
+    if (!genericErrorDialog.isShowing) {
+      topUpActivity.lockOrientation()
+      genericErrorDialog.show()
+    }
+  }
+
+  override fun showNetworkError() {
+    if (!networkErrorDialog.isShowing) {
+      topUpActivity.lockOrientation()
+      networkErrorDialog.show()
+    }
+  }
+
+  override fun errorDismisses(): Observable<Any> {
+    return Observable.merge<DialogInterface>(networkErrorDialog.dismisses(),
+        genericErrorDialog.dismisses())
+        .doOnNext { topUpActivity.unlockRotation() }
+        .map { Any() }
+  }
+
+  override fun errorCancels(): Observable<Any> {
+    return Observable.merge<DialogInterface>(networkErrorDialog.cancels(),
+        genericErrorDialog.cancels())
+        .doOnNext { topUpActivity.unlockRotation() }
+        .map { Any() }
+  }
+
+  override fun errorPositiveClicks(): Observable<Any> {
+    return Observable.merge<DialogInterface>(networkErrorDialog.positiveClicks(),
+        genericErrorDialog.positiveClicks())
+        .doOnNext { topUpActivity.unlockRotation() }
+        .map { Any() }
   }
 
   val packageName: String by lazy {
